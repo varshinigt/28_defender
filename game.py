@@ -194,6 +194,10 @@ class Game:
                 self.humanoids.remove(humanoid)
             elif humanoid.state == "falling" and abs(wrap_delta(player.x, humanoid.x)) < 24 and abs(humanoid.y - player.y) < 24:
                 humanoid.state, humanoid.y = "ground", ground_y(humanoid.x) - 8
+                # Release any stale lander reference before the humanoid can be targeted again.
+                for lander in self.landers:
+                    if lander.target is humanoid:
+                        lander.target = None
                 self.score += 500
                 on_humanoid_rescued(humanoid)
         self.update_bullets(dt)
@@ -211,10 +215,16 @@ class Game:
 
     def update_bullets(self, dt):
         for bullet in self.bullets:
-            bullet["x"] = (bullet["x"] + bullet["dir"] * 900 * dt) % WORLD_W
+            old_x = bullet["x"]
+            travel = bullet["dir"] * 900 * dt
+            bullet["x"] = (old_x + travel) % WORLD_W
             bullet["life"] -= dt
             for lander in self.landers[:]:
-                if abs(wrap_delta(bullet["x"], lander.x)) < 16 and abs(bullet["y"] - lander.y) < 12:
+                # Check the whole bullet path this frame so fast bullets cannot skip over landers.
+                start_offset = wrap_delta(lander.x, old_x)
+                end_offset = start_offset + travel
+                crossed_lander = min(start_offset, end_offset) <= 16 and max(start_offset, end_offset) >= -16
+                if crossed_lander and abs(bullet["y"] - lander.y) < 12:
                     self.shoot_lander(lander)
                     bullet["life"] = 0
                     break
