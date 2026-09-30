@@ -12,24 +12,15 @@ PHASES = [random.uniform(0, math.tau) for _ in range(3)]
 
 
 def sky_color(wave):
-    """Return a subdued, wave-dependent sky colour."""
+    """Return a distinct dark sky colour for each wave."""
     palette = [
-        (5, 5, 20),    # near-black
-        (5, 12, 38),   # deep blue
-        (12, 10, 48),  # blue-violet
-        (28, 8, 48),   # purple
-        (45, 6, 32),   # dark red
-        (28, 5, 22),   # back toward near-black
+        (5, 5, 20),    # Wave 1: near-black
+        (15, 35, 90),  # Wave 2: deep blue
+        (60, 20, 90),  # Wave 3: purple
+        (90, 20, 30),  # Wave 4: dark red
+        (10, 70, 70),  # Wave 5: teal
     ]
-    step = max(0, int(wave) - 1)
-    segment = (step // 3) % len(palette)
-    blend = (step % 3) / 3
-    start = palette[segment]
-    end = palette[(segment + 1) % len(palette)]
-    return tuple(
-        max(0, min(255, int(round(a + (b - a) * blend))))
-        for a, b in zip(start, end)
-    )
+    return palette[(int(wave) - 1) % len(palette)]
 
 
 def on_humanoid_rescued(humanoid):
@@ -41,7 +32,8 @@ def on_humanoid_rescued(humanoid):
 
 def bonus_life_threshold():
     """Return the score threshold for earning an extra life."""
-    return 10000
+    # 500 is for the demo video; use 10000 for real play.
+    return 500
 
 
 def wrap_delta(a, b):
