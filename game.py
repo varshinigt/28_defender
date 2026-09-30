@@ -33,8 +33,10 @@ def sky_color(wave):
 
 
 def on_humanoid_rescued(humanoid):
-    """Called when the player catches a falling humanoid; add a bonus or celebration here."""
-    pass
+    """Show a rescue popup and briefly protect the player."""
+    game = active_game
+    game.popups.append({"x": humanoid.x, "y": humanoid.y - 18, "life": 1.0})
+    game.player.invulnerable = max(game.player.invulnerable, 2.0)
 
 
 def bonus_life_threshold():
@@ -134,8 +136,10 @@ class Player:
 
 class Game:
     def __init__(self):
+        global active_game
         self.font = pygame.font.Font(None, 26)
         self.reset()
+        active_game = self
 
     def reset(self):
         self.player = Player()
@@ -143,6 +147,7 @@ class Game:
         self.landers, self.bullets = [], []
         self.score, self.lives, self.wave, self.state = 0, 3, 1, "play"
         self.bonus_awarded = 0
+        self.popups = []
         self.start_wave()
 
     def start_wave(self):
@@ -161,6 +166,10 @@ class Game:
     def update(self, dt, keys):
         if self.state != "play":
             return
+        for popup in self.popups:
+            popup["y"] -= 35 * dt
+            popup["life"] -= dt
+        self.popups = [popup for popup in self.popups if popup["life"] > 0]
         player = self.player
         player.update(dt, keys)
         threshold = bonus_life_threshold()
@@ -244,6 +253,12 @@ class Game:
         if player.invulnerable <= 0 or int(player.invulnerable * 10) % 2 == 0:
             f, cx = player.facing, VIEW_W / 2
             pygame.draw.polygon(screen, (240, 240, 250), [(cx + f * 18, player.y), (cx - f * 14, player.y - 8), (cx - f * 14, player.y + 8)])
+        for popup in self.popups:
+            sx = self.screen_x(popup["x"])
+            alpha = max(0, min(255, int(255 * popup["life"])))
+            popup_surface = self.font.render("+500", True, (255, 240, 120))
+            popup_surface.set_alpha(alpha)
+            screen.blit(popup_surface, (sx - popup_surface.get_width() // 2, popup["y"]))
         self.draw_radar(screen)
         hud = self.font.render(f"Score {self.score}  Lives {self.lives}  Wave {self.wave}  Humanoids {len(self.humanoids)}", True, (240, 240, 240))
         screen.blit(hud, (10, RADAR_H + 4))
