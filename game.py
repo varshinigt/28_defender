@@ -173,9 +173,11 @@ class Game:
         player = self.player
         player.update(dt, keys)
         threshold = bonus_life_threshold()
-        if threshold and self.score // threshold > self.bonus_awarded:
-            self.bonus_awarded = self.score // threshold
-            self.lives += 1
+        if threshold:
+            bonus_milestones = self.score // threshold
+            if bonus_milestones > self.bonus_awarded:
+                self.lives += bonus_milestones - self.bonus_awarded
+                self.bonus_awarded = bonus_milestones
         if keys[pygame.K_SPACE] and player.cooldown <= 0:
             player.cooldown = 0.18
             self.bullets.append({"x": player.x + player.facing * 20, "y": player.y, "dir": player.facing, "life": 0.7})
