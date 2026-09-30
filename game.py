@@ -203,7 +203,7 @@ class Game:
         blips += [(l.x, l.y, (255, 90, 90) if l.mutant else (230, 200, 60)) for l in self.landers]
         blips.append((self.player.x, self.player.y, (255, 255, 255)))
         for x, y, color in blips:
-            rx = self.screen_x(x) % VIEW_W
+            rx = x / WORLD_W * VIEW_W
             ry = (y - PLAY_TOP) / (VIEW_H - PLAY_TOP) * (RADAR_H - 8) + 4
             pygame.draw.rect(screen, color, (rx - 2, ry - 2, 4, 4))
 
