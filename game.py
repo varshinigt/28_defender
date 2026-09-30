@@ -12,8 +12,24 @@ PHASES = [random.uniform(0, math.tau) for _ in range(3)]
 
 
 def sky_color(wave):
-    """Return an (r, g, b) sky colour for the current wave, or None for the default."""
-    pass
+    """Return a subdued, wave-dependent sky colour."""
+    palette = [
+        (5, 5, 20),    # near-black
+        (5, 12, 38),   # deep blue
+        (12, 10, 48),  # blue-violet
+        (28, 8, 48),   # purple
+        (45, 6, 32),   # dark red
+        (28, 5, 22),   # back toward near-black
+    ]
+    step = max(0, int(wave) - 1)
+    segment = (step // 3) % len(palette)
+    blend = (step % 3) / 3
+    start = palette[segment]
+    end = palette[(segment + 1) % len(palette)]
+    return tuple(
+        max(0, min(255, int(round(a + (b - a) * blend))))
+        for a, b in zip(start, end)
+    )
 
 
 def on_humanoid_rescued(humanoid):
